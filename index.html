@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>美国2025网络硬核问题 × 内生安全十大议题 — 左右对映交互图</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --card:#111827;
+      --muted:#94a3b8;
+      --line:#334155;
+      --us:#3b82f6;
+      --cn:#22c55e;
+      --accent:#eab308;
+      --text:#e5e7eb;
+      --text-weak:#cbd5e1;
+      --hover:#1f2937;
+      --chip:#0b2545;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 80% 20%, #0f172a 30%, #0b1220 70%) fixed;
+      color:var(--text);
+    }
+    .wrap{
+      display:flex; flex-direction:column; height:100%;
+    }
+    header{
+      padding:18px 20px 10px;
+      border-bottom:1px solid #1f2937;
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    }
+    .title{font-weight:700; font-size:20px; letter-spacing:0.2px;}
+    .subtitle{color:var(--muted); font-size:13px}
+    .toolbar{
+      margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .btn, .input{
+      background:#0f172a; color:var(--text); border:1px solid #243042;
+      border-radius:8px; padding:8px 12px; font-size:13px;
+    }
+    .btn:hover{background:#142036}
+    .input{min-width:220px}
+    .layout{
+      display:grid; grid-template-columns: 1fr 40px 1fr; gap:10px;
+      height:calc(100% - 76px);
+    }
+    .panel{
+      padding:14px; overflow:auto; backdrop-filter: blur(2px);
+    }
+    .panel.left{ border-right:1px dashed #243042;}
+    .panel.right{ border-left:1px dashed #243042;}
+    .panel h2{
+      margin:6px 0 10px; font-size:14px; font-weight:700; color:var(--text-weak);
+      display:flex; align-items:center; gap:8px;
+    }
+    .legend{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;
+    }
+    .dot{width:10px;height:10px;border-radius:50%;}
+    .dot.us{background:var(--us)}
+    .dot.cn{background:var(--cn)}
+    .list{
+      display:grid; gap:8px;
+    }
+    .item{
+      background:linear-gradient(180deg, #0f172a 0%, #0e1626 100%);
+      border:1px solid #1f2a3d; border-radius:10px; padding:10px 12px;
+      cursor:pointer; position:relative;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .item:hover{ transform: translateY(-1px); border-color:#2a3f58; box-shadow:0 6px 16px rgba(0,0,0,0.25);}
+    .item.locked{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset;}
+    .item h3{ margin:0 0 6px; font-size:14px; line-height:1.2;}
+    .item p{ margin:0; color:var(--muted); font-size:12px; line-height:1.35;}
+    .chips{ margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;}
+    .chip{
+      font-size:11px; color:#dbeafe; background:#0b2545; border:1px solid #1e3a8a;
+      padding:3px 6px; border-radius:999px;
+    }
+    .center{
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+    }
+    /* Canvas container */
+    #canvasBox{
+      width:100%; height:100%; position:relative;
+    }
+    canvas{ width:100%; height:100%; display:block; }
+    .hint{
+      position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+      background:#0b2545cc; color:#cbd5e1; font-size:11px; padding:6px 10px; border-radius:8px;
+      border:1px solid #1e3a8a;
+    }
+    .tooltip{
+      position:fixed; pointer-events:none; background:#0b2545; color:#e5e7eb;
+      border:1px solid #1e3a8a; border-radius:8px; padding:8px 10px; font-size:12px;
+      max-width:320px; z-index:20; display:none;
+    }
+    .pill{ padding:2px 6px; border-radius:999px; font-size:11px; border:1px solid #22344e; color:#cbd5e1;}
+    .pill.us{ border-color:#1e40af; color:#bfdbfe}
+    .pill.cn{ border-color:#166534; color:#bbf7d0}
+    .footer{
+      padding:8px 14px; color:#94a3b8; font-size:11px; border-top:1px solid #1f2937;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background:#0f172a; border:1px solid #243042; padding:1px 4px; border-radius:6px; font-size:11px; color:#cbd5e1;}
+    @media (max-width: 1100px){
+      .layout{ grid-template-columns: 1fr; }
+      .panel.left, .panel.right{ border:none }
+      .center{ height:320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title">美国2025网络硬核问题 × 内生安全十大理论与工程议题</div>
+        <div class="subtitle">左侧：NASEM 2025硬问题簇｜右侧：内生安全议题簇｜中间：对映连线（悬停高亮，点击锁定，搜索过滤）</div>
+      </div>
+      <div class="toolbar">
+        <input id="search" class="input" placeholder="搜索关键词（如：供应链 / 裁决 / AI / 溯源）" />
+        <button id="clear" class="btn">清空筛选</button>
+        <button id="export" class="btn">导出PNG</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel left">
+        <h2><span class="dot us"></span> 美国2025网络硬问题（NASEM）</h2>
+        <div id="leftList" class="list"></div>
+      </aside>
+
+      <section class="center">
+        <div id="canvasBox">
+          <canvas id="lines"></canvas>
+          <div class="hint">提示：鼠标悬停高亮关联；点击条目可锁定；按 <span class="kbd">Ctrl</span> 多选；可搜索过滤。</div>
+        </div>
+      </section>
+
+      <aside class="panel right">
+        <h2><span class="dot cn"></span> 内生安全十大理论 & 工程议题</h2>
+        <div id="rightList" class="list"></div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      <div>制图：gpt-5｜关系为分簇层面，非一一对应；线条粗细≈关联强度</div>
+      <div><span class="pill us">US</span> ↔ <span class="pill cn">CN-内生</span> | 可根据需要定制双语、Logo与主题色</div>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip"></div>
+
+  <script>
+    // 数据定义：左侧美国NASEM 2025硬问题簇
+    const LEFT = [
+      { id:'A', name:'风险与信任（Risk & Trust）', desc:'端到端风险治理、度量与信任构建', chips:['治理','度量','认证'] },
+      { id:'B', name:'安全开发与系统组合（Secure Dev & Composition）', desc:'把安全属性内化到设计、供应与组合', chips:['供应链','SRE','组合验证'] },
+      { id:'C', name:'供应链与溯源（Supply Chain & Provenance）', desc:'来源追踪、完整性、可追责性', chips:['SBOM','签名','溯源'] },
+      { id:'D', name:'AI与人机交互（AI & HCI）', desc:'模型鲁棒、对齐、防滥用与可操作性', chips:['模型供应链','对齐','红队'] },
+      { id:'E', name:'网络物理系统与韧性（CPS & Resilience）', desc:'物理后果、级联失效、运营弹性', chips:['ICS','车联网','容错'] },
+      { id:'F', name:'运营安全（Operational Security）', desc:'监测、响应、持续改进与自动化', chips:['SOC','自动化','可视化'] },
+      { id:'G', name:'经济与政策（Economics & Policy）', desc:'激励、市场设计、标准与合规', chips:['保险','补贴','标准'] },
+      { id:'H', name:'认证与指标（Assurance & Metrics）', desc:'指标统一、评测与认证', chips:['证据','基准','认证'] },
+    ];
+
+    // 右侧：内生安全十大理论&工程（合并为簇）
+    const RIGHT = [
+      { id:'R1', name:'度量评估与决策支持（⑧/工程⑨⑦）', desc:'统一量纲、运行证据、自动驾驶量纲与插桩证据', chips:['度量','证据链','量纲'] },
+      { id:'R2', name:'结构编码与等价异构（⑤/工程⑤）', desc:'非理想假设下的结构编码与等价异构代码生成', chips:['结构编码','等价异构','抗脆弱'] },
+      { id:'R3', name:'内生语言与操作系统（工程①②）', desc:'语言/OS内化安全属性，默认安全、组合可证', chips:['语言','OS','默认安全'] },
+      { id:'R4', name:'策略裁决与共识（工程⑥）', desc:'多维裁决/共识，运行态的可信组合', chips:['裁决','共识','治理'] },
+      { id:'R5', name:'生成式云网融合（工程④）', desc:'自动组装、动态服务编排、云网一体生成式', chips:['编排','弹性','自动化'] },
+      { id:'R6', name:'要地/隘口设防与溯源（工程⑦/工程⑧）', desc:'识别关键要地、白盒插桩黄金测试、事故溯源', chips:['要地','插桩','溯源'] },
+      { id:'R7', name:'必要多样性与超稳定（③/④）', desc:'多样性冗余与自校验提升韧性', chips:['多样性','冗余','自校验'] },
+      { id:'R8', name:'可信AI与异构执行体（工程③/⑨）', desc:'可信AI应用、生成式异构执行体与裁决', chips:['AI安全','异构执行','红队'] },
+      { id:'R9', name:'网络经济学与生态扩散（⑩/工程⑩）', desc:'成本-效益度量、激励与教学工具链', chips:['经济','激励','实践'] },
+      { id:'R10', name:'信息论与完美安全边界（①④⑤）', desc:'相对完备、电磁空间完美安全、界与可达性', chips:['界','可达性','信息论'] },
+    ];
+
+    // 对映关系：left.id -> right.id 列表与强度（0.3~1）
+    const LINKS = [
+      { l:'A', r:'R1', w:0.9, note:'风险度量与证据主线' },
+      { l:'A', r:'R4', w:0.6, note:'治理中的裁决/共识机制' },
+      { l:'A', r:'R9', w:0.55, note:'经济激励与政策耦合' },
+
+      { l:'B', r:'R2', w:0.8, note:'结构编码与等价异构保障组合' },
+      { l:'B', r:'R3', w:0.75, note:'语言/OS默认安全' },
+      { l:'B', r:'R4', w:0.6, note:'运行态裁决' },
+
+      { l:'C', r:'R6', w:0.85, note:'要地/插桩/溯源提供证据链' },
+      { l:'C', r:'R1', w:0.6, note:'溯源数据进入度量体系' },
+
+      { l:'D', r:'R8', w:0.85, note:'可信AI与异构执行体' },
+      { l:'D', r:'R4', w:0.55, note:'AI系统裁决与人因' },
+      { l:'D', r:'R1', w:0.5, note:'AI指标与评测' },
+
+      { l:'E', r:'R7', w:0.75, note:'多样性/冗余/超稳定' },
+      { l:'E', r:'R6', w:0.55, note:'要地/隘口在CPS' },
+      { l:'E', r:'R1', w:0.5, note:'韧性量纲与证据' },
+
+      { l:'F', r:'R5', w:0.7, note:'运营自动化与云网融合' },
+      { l:'F', r:'R4', w:0.6, note:'运行裁决与策略' },
+      { l:'F', r:'R1', w:0.5, note:'运维指标' },
+
+      { l:'G', r:'R9', w:0.8, note:'经济激励与生态扩散' },
+      { l:'G', r:'R1', w:0.5, note:'成本-效益度量' },
+
+      { l:'H', r:'R1', w:0.85, note:'认证与指标对齐' },
+      { l:'H', r:'R10', w:0.5, note:'理论边界支撑认证' },
+
+      // 额外跨域联系（可选）
+      { l:'A', r:'R10', w:0.45, note:'风险边界与可达性' },
+      { l:'B', r:'R10', w:0.4, note:'设计边界与证明' },
+    ];
+
+    // 渲染列表项
+    const leftList = document.getElementById('leftList');
+    const rightList = document.getElementById('rightList');
+    const tooltip = document.getElementById('tooltip');
+    const searchInput = document.getElementById('search');
+    const clearBtn = document.getElementById('clear');
+    const exportBtn = document.getElementById('export');
+    const canvas = document.getElementById('lines');
+    const ctx = canvas.getContext('2d');
+    const box = document.getElementById('canvasBox');
+
+    let lElems = new Map(), rElems = new Map();
+    let locked = new Set(); // 锁定节点ID（可多选）
+    let filterText = '';
+
+    function makeItem(data, side){
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.dataset.id = data.id;
+      div.dataset.side = side;
+      div.innerHTML = `
+        <h3>${data.name}</h3>
+        <p>${data.desc}</p>
+        <div class="chips">${data.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+      `;
+      // 悬停
+      div.addEventListener('mouseenter', ()=>{ if(!locked.size){ highlight([data.id]); } showTipFor(data, side); });
+      div.addEventListener('mouseleave', ()=>{ if(!locked.size){ highlight([]); } hideTip(); });
+
+      // 点击锁定/多选
+      div.addEventListener('click', (e)=>{
+        const multi = e.ctrlKey || e.metaKey || e.shiftKey;
+        if(!multi) locked.clear();
+        if(locked.has(data.id)){ locked.delete(data.id); div.classList.remove('locked'); }
+        else { locked.add(data.id); div.classList.add('locked'); }
+        highlight([...locked]);
+      });
+      return div;
+    }
+
+    function renderLists(){
+      leftList.innerHTML = '';
+      rightList.innerHTML = '';
+      lElems.clear(); rElems.clear();
+      const ft = filterText.trim().toLowerCase();
+
+      const match = (obj)=> {
+        if(!ft) return true;
+        const t = (obj.name + ' ' + obj.desc + ' ' + obj.chips.join(' ')).toLowerCase();
+        return t.includes(ft);
+      };
+
+      LEFT.filter(match).forEach(d=>{
+        const el = makeItem(d,'L'); leftList.appendChild(el); lElems.set(d.id, el);
+      });
+      RIGHT.filter(match).forEach(d=>{
+        const el = makeItem(d,'R'); rightList.appendChild(el); rElems.set(d.id, el);
+      });
+      resizeCanvas();
+      drawLinks();
+    }
+
+    function getRect(el){
+      const r = el.getBoundingClientRect();
+      return { x:r.left + r.width, y:r.top + r.height/2, left:r.left, right:r.right, width:r.width, height:r.height, midY:r.top + r.height/2 };
+    }
+
+    function resizeCanvas(){
+      const rect = box.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+
+    function getAnchors(){
+      // 计算每个可见item在画布内的锚点坐标
+      const b = box.getBoundingClientRect();
+      const anchorsL = [], anchorsR = [];
+      lElems.forEach((el,id)=>{
+        const r = el.getBoundingClientRect();
+        anchorsL.push({ id, x: r.right - b.left + 6, y: r.top - b.top + r.height/2 });
+      });
+      rElems.forEach((el,id)=>{
+        const r = el.getBoundingClientRect();
+        anchorsR.push({ id, x: r.left - b.left - 6, y: r.top - b.top + r.height/2 });
+      });
+      return { anchorsL, anchorsR };
+    }
+
+    function drawLinks(highlightIds = []){
+      const { anchorsL, anchorsR } = getAnchors();
+      const mapL = Object.fromEntries(anchorsL.map(a=>[a.id,a]));
+      const mapR = Object.fromEntries(anchorsR.map(a=>[a.id,a]));
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // 背景网格（轻）
+      const h = canvas.height, w = canvas.width;
+      ctx.save();
+      ctx.globalAlpha = 0.08;
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      for(let y=20;y<h;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+      ctx.restore();
+
+      // 绘制连接
+      const isActive = (lId, rId)=>{
+        if(!highlightIds.length) return true;
+        return highlightIds.includes(lId) || highlightIds.includes(rId);
+      };
+
+      LINKS.forEach(link=>{
+        const L = mapL[link.l], R = mapR[link.r];
+        if(!L || !R) return;
+        const active = isActive(link.l, link.r);
+        const w = active ? (2 + link.w*3) : 1.2;
+        ctx.lineWidth = w;
+        ctx.strokeStyle = active ? gradientStroke(L, R) : 'rgba(148,163,184,0.35)';
+        ctx.globalAlpha = active ? 0.95 : 0.5;
+
+        const midX = (L.x + R.x)/2;
+        ctx.beginPath();
+        ctx.moveTo(L.x, L.y);
+        ctx.bezierCurveTo(midX, L.y, midX, R.y, R.x, R.y);
+        ctx.stroke();
+
+        // 小端点
+        if(active){
+          ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(L.x, L.y, 2.2, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(R.x, R.y, 2.2, 0, Math.PI*2); ctx.fill();
+        }
+      });
+    }
+
+    function gradientStroke(L, R){
+      const g = ctx.createLinearGradient(L.x, L.y, R.x, R.y);
+      g.addColorStop(0, 'rgba(59,130,246,0.95)'); // US
+      g.addColorStop(1, 'rgba(34,197,94,0.95)'); // CN
+      return g;
+    }
+
+    function highlight(ids){
+      drawLinks(ids);
+      // 面板项视觉提示
+      lElems.forEach((el,id)=> el.style.opacity = (!ids.length || ids.includes(id)) ? '1' : '0.45');
+      rElems.forEach((el,id)=> el.style.opacity = (!ids.length || ids.includes(id)) ? '1' : '0.45');
+    }
+
+    function showTipFor(data, side){
+      const tips = [];
+      if(side==='L'){
+        LINKS.filter(x=>x.l===data.id).forEach(x=>{
+          const r = RIGHT.find(r=>r.id===x.r);
+          if(r) tips.push(`→ ${r.name}（强度：${x.w.toFixed(2)}）｜${x.note}`);
+        });
+      }else{
+        LINKS.filter(x=>x.r===data.id).forEach(x=>{
+          const l = LEFT.find(l=>l.id===x.l);
+          if(l) tips.push(`← ${l.name}（强度：${x.w.toFixed(2)}）｜${x.note}`);
+        });
+      }
+      tooltip.innerHTML = `
+        <div style="margin-bottom:4px;font-weight:700">${side==='L'?'NASEM':'内生安全'}：${data.name}</div>
+        <div style="margin-bottom:6px;color:#cbd5e1">${data.desc}</div>
+        <div>${tips.length?tips.join('<br>'):'暂无可见映射（可能被过滤）'}</div>
+      `;
+      tooltip.style.display='block';
+    }
+    function hideTip(){ tooltip.style.display='none'; }
+    document.addEventListener('mousemove', (e)=>{
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY + 14) + 'px';
+    });
+
+    // 搜索与清空
+    searchInput.addEventListener('input', ()=>{
+      filterText = searchInput.value;
+      locked.clear();
+      document.querySelectorAll('.item.locked').forEach(el=>el.classList.remove('locked'));
+      renderLists();
+    });
+    clearBtn.addEventListener('click', ()=>{
+      searchInput.value=''; filterText=''; locked.clear();
+      document.querySelectorAll('.item.locked').forEach(el=>el.classList.remove('locked'));
+      renderLists();
+    });
+
+    // 导出PNG
+    exportBtn.addEventListener('click', ()=>{
+      // 将中间画布与两侧面板渲染到离屏canvas
+      const scale = 2;
+      const w = document.body.clientWidth;
+      const h = document.body.clientHeight;
+      const out = document.createElement('canvas');
+      out.width = w * scale; out.height = h * scale;
+      const octx = out.getContext('2d');
+      octx.scale(scale, scale);
+
+      // 背景
+      octx.fillStyle = getComputedStyle(document.body).backgroundColor || '#0b1220';
+      octx.fillRect(0,0,w,h);
+
+      // 简化导出：绘制线条层 + 文本（条目）
+      // 1) 线条
+      const rect = box.getBoundingClientRect();
+      octx.drawImage(canvas, rect.left, rect.top, rect.width, rect.height);
+
+      // 2) 左右文字
+      lElems.forEach((el)=>{
+        const r = el.getBoundingClientRect();
+        drawCard(octx, r.left, r.top, r.width, r.height, el, 'US');
+      });
+      rElems.forEach((el)=>{
+        const r = el.getBoundingClientRect();
+        drawCard(octx, r.left, r.top, r.width, r.height, el, 'CN');
+      });
+
+      const a = document.createElement('a');
+      a.download = 'NASEM-x-InnateSecurity-Mapping.png';
+      a.href = out.toDataURL('image/png');
+      a.click();
+    });
+
+    function drawCard(ctx, x, y, w, h, el, side){
+      // 背板
+      ctx.fillStyle = 'rgba(15,23,42,0.9)';
+      roundRect(ctx, x, y, w, h, 10, true, false);
+      ctx.strokeStyle = side==='US' ? 'rgba(59,130,246,0.5)' : 'rgba(34,197,94,0.5)';
+      ctx.lineWidth = 1; roundRect(ctx, x, y, w, h, 10, false, true);
+
+      // 文本
+      const title = el.querySelector('h3').textContent;
+      const desc = el.querySelector('p').textContent;
+      ctx.fillStyle = '#e5e7eb'; ctx.font = '700 14px Inter, Arial';
+      ctx.fillText(title, x+12, y+20);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px Inter, Arial';
+      wrapText(ctx, desc, x+12, y+38, w-24, 14);
+    }
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split('');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n];
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    // 窗口变化时重绘
+    window.addEventListener('resize', ()=>{ resizeCanvas(); drawLinks([...locked]); });
+
+    // 初次渲染
+    renderLists(); resizeCanvas(); drawLinks();
+
+    // 点击空白处取消锁定
+    document.addEventListener('click', (e)=>{
+      const isItem = e.target.closest && e.target.closest('.item');
+      if(!isItem && !(e.target.closest && e.target.closest('.toolbar'))){
+        locked.clear();
+        document.querySelectorAll('.item.locked').forEach(el=>el.classList.remove('locked'));
+        highlight([]);
+      }
+    });
+  </script>
+</body>
+</html>
